@@ -19,10 +19,5 @@ def extract_keywords(query):
         if word.isalpha() and word.lower() not in stop_words
     ]
 
-    return keywords
-
-
-# Example usage
-query = "What are the things I should be cautious about when I visit here?"
-keywords = extract_keywords(query)
-print("Keywords:", keywords)
+    # Return keywords as a comma-separated string
+    return ", ".join(keywords)
