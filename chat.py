@@ -1,17 +1,11 @@
-from ast import List
 from llama_index.llms.groq import Groq
 from llama_index.core.llms import ChatMessage
 import os
 from dotenv import load_dotenv
-
 from db import MistralAPI, VectorStore
 load_dotenv()
 import numpy as np
 from PIL import Image
-import glob
-import psycopg2
-from mistralai.client import MistralClient
-import gradio as gr
 import numpy as np
 from PIL import Image
 import re
@@ -70,37 +64,31 @@ class Chat:
         # Rerank
         retrived_parsed = [(index, item[3]) for index, item in enumerate(retrived)]
         retrived_str = str(retrived_parsed)
-        print("Retrievedstr ", retrived_str)
+        print("Retrievedstr ", retrived_str, "\n\n")
 
         rerank_prompt = "User query: " + message + "\nTop " + str(k) + "retrieved captions: " + retrived_str
-        print(rerank_prompt)
-        print()
 
         rerank_messages = [ChatMessage(role="system", content=self.rerank_system_prompt), ChatMessage(role="user", content=rerank_prompt)]
         rerank_result = self.llm.chat(rerank_messages)
         rerank_result = rerank_result.message.content
-        print(type(rerank_result))
-        print(rerank_result)
-        print()
      
         # Extract the number between <list_index> and </list_index>
         match = re.search(r'<list_index>(\d+)</list_index>', rerank_result)
         most_relevant_index = 0 #if there is no match, use the first one.
         if match:
             most_relevant_index = match.group(1)
-            print(f"The most relevant caption is at index: {most_relevant_index}")
+            print(f"The most relevant caption is at index: {most_relevant_index} \n\n")
         most_relevant_image = retrived[int(most_relevant_index)]
         most_relevant_filename = most_relevant_image[2]
         most_relevant_caption = most_relevant_image[3]
 
         message_with_retrieved = "User query: " + message + "\nMost relevant image caption: " + most_relevant_caption
-        print()
         print("message with retriveed" , message_with_retrieved, "\n")
 
         messages.append(ChatMessage(role="user", content=message_with_retrieved))
 
         # get image and convert to numpy
-        print("Most relevant image: ", most_relevant_filename)
+        print("Most relevant image: ", most_relevant_filename, "\n\n")
         image = Image.open(most_relevant_filename)
         image_np = np.array(image)
         resp = self.llm.stream_chat(messages)
@@ -118,8 +106,7 @@ class Chat:
 
 def test_Chat():
     chat = Chat()
-    print("HELLO")
-    chat.chat("where is the fire exit?", [])
+    print(chat.chat("where is the fire exit?", [])[1]
     print()
     chat.close()
     
