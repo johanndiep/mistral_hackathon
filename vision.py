@@ -73,6 +73,8 @@ class LLAVAModel:
 
         # Perform VLLM model evaluation
         return eval_model(args)
+    
+    def 
 
 
 # Example usage
