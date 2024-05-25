@@ -1,23 +1,28 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.tag import pos_tag
 
 
-def extract_keywords(query):
+def extract_nouns(query):
     # Download necessary NLTK data files
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
+    nltk.download("averaged_perceptron_tagger", quiet=True)
 
     # Define stopwords and tokenize the query
     stop_words = set(stopwords.words("english"))
     word_tokens = word_tokenize(query)
 
-    # Extract keywords: remove stopwords and non-alphabetic tokens
-    keywords = [
+    # POS tagging
+    tagged_words = pos_tag(word_tokens)
+
+    # Extract nouns: remove stopwords and non-alphabetic tokens, and filter for nouns
+    nouns = [
         word
-        for word in word_tokens
-        if word.isalpha() and word.lower() not in stop_words
+        for word, pos in tagged_words
+        if word.isalpha() and word.lower() not in stop_words and pos.startswith("NN")
     ]
 
-    # Return keywords as a comma-separated string
-    return ", ".join(keywords)
+    # Return nouns as a comma-separated string
+    return ", ".join(nouns)
