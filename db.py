@@ -14,7 +14,7 @@ class MistralAPI:
     def __init__(self):
         self.client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
 
-    def embedd(self, txt):
+    def embed(self, txt):
         """ 
         Embedd a single string
         """
@@ -56,11 +56,14 @@ class Database:
         # maybe add readall here?
 
     def search(self, embedding, k):
+        # Transform the embedding list to a string format for SQL query compatibility
+        embedding_str = '[' + ','.join(map(str, embedding)) + ']'
+
         query = """
-            SELECT * FROM lechaton ORDER BY embedding <-> '(%s)' LIMIT (%s);
+            SELECT * FROM lechaton ORDER BY embedding <=> (%s) LIMIT (%s);
         """
         # Execute the query
-        self.cur.execute(query, (embedding, k))
+        self.cur.execute(query, (embedding_str, k))
         # Commit the changes to the database
         self.conn.commit()
 
@@ -74,7 +77,7 @@ class VectorStore:
         self.mistral_client = MistralAPI()
 
     def insert(self, caption, image_filename, video_filename):
-        embedding = self.mistral_client.embedd(caption)
+        embedding = self.mistral_client.embed(caption)
         self.db.insertImage(caption, image_filename, video_filename, embedding)
 
     def search(self, text, k):
@@ -82,3 +85,35 @@ class VectorStore:
         rows = self.db.search(embedding, k)
         return rows
 
+def test_add_to_vs():
+    vs = VectorStore()
+
+    vs = VectorStore()
+    mistral_folder = 'Mistral'
+    files = os.listdir(mistral_folder)[:5]  # Get the first 5 files from the Mistral folder
+    captions = [
+        "A serene landscape",
+        "A bustling cityscape",
+        "A quiet moment",
+        "The thrill of adventure",
+        "A night under the stars"
+    ]
+    
+    for i, file in enumerate(files):
+        if i > 5:
+            break
+        if file.endswith('.jpg'):
+            image_filename = os.path.join(mistral_folder, file)
+            video_filename = 'demo'
+            caption = captions[i]
+            vs.insert(caption, image_filename, video_filename)
+
+def test_search_vs():
+    vs = VectorStore()
+    rows = vs.search("cat plz", 2)
+    print(rows)
+
+if __name__ == "__main__":
+    #test_add_to_vs()
+    test_search_vs()
+    pass
