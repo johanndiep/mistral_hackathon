@@ -79,6 +79,9 @@ class VectorStore:
         embedding = self.mistral_client.embed(text)
         rows = self.db.search(embedding, k)
         return rows
+    
+    def close(self):
+        self.db.closeConn()
 
 def test_add_to_vs():
     vs = VectorStore()
@@ -105,7 +108,7 @@ def test_add_to_vs():
 
 def test_search_vs():
     vs = VectorStore()
-    rows = vs.search("What is the name of the plant?", 2)
+    rows = vs.search("A small group of humans", 2)
     print(rows)
 
 if __name__ == "__main__":
