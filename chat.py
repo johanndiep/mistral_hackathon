@@ -10,6 +10,8 @@ import numpy as np
 from PIL import Image
 import re
 
+#You may recieve a list of bounding boxes, each containing specific parts of the image that may be relevant to the user query.
+
 class Chat:
     def __init__(self, mode="test"):
         self.default_prompt = "Where is the fire escape"
@@ -17,7 +19,7 @@ class Chat:
                             For each user query, you will be provided with the following inputs:
                             User Query: A specific question or request for information related to a video.
                             Image caption: We retrieve the most relevant image to the user query in the video for you and provide you with a detailed caption for that image. 
-                            Bounding Boxes: You may recieve a list of bounding boxes, each containing specific parts of the image that may be relevant to the user query.
+                            Additional information: You may recieve a string of information from a specialized model. If this is relevant to the user query, tell them that this information was retrieved from a specialized segmentation model, and confidence is therefor high, if 
 
                             Your task is to analyze these inputs and generate a detailed response that addresses the user query, utilizing the information from the image caption and the contents within the bounding boxes. Follow these guidelines to ensure a comprehensive and accurate response:
 
