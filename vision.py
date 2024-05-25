@@ -1,14 +1,12 @@
 from llava.mm_utils import get_model_name_from_path
 from llava.eval.run_llava import eval_model
 
-
 class LLAVAModel:
     """A class representing a VLLM for generating text based on both text prompts and visual inputs."""
 
     def __init__(
         self,
-        model_path,
-        prompt,
+        model_path="liuhaotian/llava-v1.6-mistral-7b",
         model_base=None,
         conv_mode=None,
         sep=",",
@@ -32,7 +30,6 @@ class LLAVAModel:
             - max_new_tokens (int, optional): Maximum number of new tokens to generate, defaults to 512.
         """
         self.model_path = model_path
-        self.prompt = prompt
         self.model_base = model_base
         self.conv_mode = conv_mode
         self.sep = sep
@@ -43,7 +40,7 @@ class LLAVAModel:
 
         self.model_name = get_model_name_from_path(model_path)
 
-    def visual_inference(self, image_file):
+    def visual_inference(self, image_file, prompt):
         """
         Perform visual inference using VLLM model.
 
@@ -60,7 +57,7 @@ class LLAVAModel:
                 "model_path": self.model_path,
                 "model_base": self.model_base,
                 "model_name": self.model_name,
-                "query": self.prompt,
+                "query": prompt,
                 "conv_mode": self.conv_mode,
                 "image_file": image_file,
                 "sep": self.sep,
@@ -74,13 +71,16 @@ class LLAVAModel:
         # Perform VLLM model evaluation
         return eval_model(args)
 
+def test_LLAVAModel():
+    # Example usage
+    model_path = "liuhaotian/llava-v1.6-mistral-7b"
+    prompt = "How many people are in this place?"
 
-# Example usage
-model_path = "liuhaotian/llava-v1.6-34b"
-prompt = "How many people are in this place?"
+    vllm_model = LLAVAModel(model_path)
 
-vllm_model = LLAVAModel(model_path, prompt)
+    image_path = "data/Untitled.jpeg"
+    result = vllm_model.visual_inference(image_path, prompt)
+    print(result)
 
-image_path = "data/Untitled.jpeg"
-result = vllm_model.visual_inference(image_path)
-print(result)
+if __name__ == "__main__":
+    test_LLAVAModel()

@@ -1,14 +1,9 @@
-from ast import List
-from llama_index.llms.groq import Groq
-from llama_index.core.llms import ChatMessage
 import os
 from dotenv import load_dotenv
 load_dotenv()
-import numpy as np
-from PIL import Image
-import glob
 import psycopg2
 from mistralai.client import MistralClient
+
 
 class MistralAPI:
     def __init__(self):
@@ -110,7 +105,7 @@ def test_add_to_vs():
 
 def test_search_vs():
     vs = VectorStore()
-    rows = vs.search("cat plz", 2)
+    rows = vs.search("What is the name of the plant?", 2)
     print(rows)
 
 if __name__ == "__main__":
