@@ -77,7 +77,7 @@ class LLAVAModel:
 
 # Example usage
 model_path = "liuhaotian/llava-v1.5-7b"
-prompt = "What are the things I should be cautious about when I visit here?"
+prompt = "How many people are in this place?"
 
 vllm_model = LLAVAModel(model_path, prompt)
 
