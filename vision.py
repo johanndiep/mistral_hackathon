@@ -82,5 +82,9 @@ def test_LLAVAModel():
     result = vllm_model.visual_inference(image_path, prompt)
     print(result)
 
+    image_path = "data/Recording.jpeg"
+    result = vllm_model.visual_inference(image_path)
+    print(result)
+
 if __name__ == "__main__":
     test_LLAVAModel()
