@@ -81,6 +81,6 @@ prompt = "How many people are in this place?"
 
 vllm_model = LLAVAModel(model_path, prompt)
 
-image_path = "data/Untitled.jpeg"
+image_path = "data/Recording.jpeg"
 result = vllm_model.visual_inference(image_path)
 print(result)

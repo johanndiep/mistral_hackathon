@@ -25,4 +25,4 @@ def extract_nouns(query):
     ]
 
     # Return nouns as a comma-separated string
-    return ", ".join(nouns)
+    return nouns[0]
