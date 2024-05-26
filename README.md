@@ -57,8 +57,9 @@ pip install -r requirements.txt
 
 # deploy LLava [1] and fix in the same folder
 cd ..
-git clone git@github.com:kimborgen/LLaVA/tree/mistral-hackathon
+git clone git@github.com:kimborgen/LLaVA.git
 cd LLavA
+git checkout mistral-hackathon #quickfix
 conda create -n llava python=3.10 -y
 conda activate llava
 pip install --upgrade pip  # enable PEP 660 support
@@ -66,8 +67,10 @@ pip install -e .
 cd ..
 
 # Deploy Language Segment-Anything [2, 3] and fix in the same folder
-git clone git@github.com:kimborgen/lang-segment-anything/tree/mistral-hackathon
-cd lang-segment-anything && pip install -e .
+git clone git@github.com:kimborgen/lang-segment-anything
+cd lang-segment-anything 
+git checkout mistral-hackathon
+pip install -e .
 ```
 
 - Setup a Neon database and provide the database URL as an environment variable `DATABASE_URL` [4]
