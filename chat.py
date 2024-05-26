@@ -27,6 +27,7 @@ class Chat:
                             Your task is to think step by step to satisfy the following tasks:
                             - Select one, and only one, image to return to the user. Compare the information in the caption and the segmenation result, and pick the one that will satisfy the user query the most.
                             You must provide this index in the following format: <image_index>0</image_index>.
+                            - Seperate the text with this exact phrase: "RESPONSETOTHEUSER". This phrase should only appear once, after you found the most relevant index/image, and before the answer to the user.
                             - Based on the selected image and its information, analyze the information and generate a detailed but concise response that addresses the user query, utilizing the information from the image caption and the contents within the bounding boxes. 
                             
                             Follow these guidlines:
@@ -60,8 +61,19 @@ class Chat:
     
         self.llm = Groq(model="mixtral-8x7b-32768", api_key=os.environ.get("GROQ_API_KEY"))
         self.segmentation_model = ImageSegmentation()
+        self.rewrite_system_prompt = """
+            Rewrite and expand the user query. Is there some missing information that would be usefull to include? For example a setting, object, or something that is not mentioned, but would be relevant to search for?
+            The query should be consise, so if the user query already contains the relevant information, keep it as is. 
+            Either way, generate the query in full and only the query.
+            """
         
     def chat(self, message, history):
+        # rewrite the user query
+        message = self.mistral_client.chat([ChatMessage(role="system", content=self.rewrite_system_prompt), ChatMessage(role="user", content=message)])
+        message = message.message.content
+        print("rewritten user query: ", message)
+
+
         # create the message history with system prompt
         messages = [ChatMessage(role="system", content=self.system_prompt)]
         if history:
@@ -72,7 +84,7 @@ class Chat:
         # Retrival top 3 k
         k = 10
         retrived = self.vs.search(message, k)
-
+       
         # Rerank
         retrived_parsed = [(index, item[3]) for index, item in enumerate(retrived)]
         retrived_str = str(retrived_parsed)
@@ -168,17 +180,28 @@ class Chat:
                 print("failed to convert to number ", index_match)
             print("index match" , index_match)
         else:
-            number_response = self.mistral_client.chat([ChatMessage(role="system", content="Find the Index number from the following text from the user. It should be inside <list_index></list_index>, if it is not try to extract this number from the context. Only return the single number and nothing else. Only a single number.")])
+            number_response = self.mistral_client.chat([ChatMessage(role="system", content="Find the Index number from the following text from the user. It should be inside <list_index></list_index>, if it is not try to extract this number from the context. Only return the single number and nothing else. Only a single number."), ChatMessage(role="user", content=response)])
             number_response = number_response.message.content
+            print("backup number_response: ", number_response)
             try:
                 index_match = int(number_response)
             except:
                 print("found no index :(")
-        
-        if index_match:
-            return sl[index_match][3], response
+        print("INDEX MATCH ", index_match)
+        user_response_split = response.split("RESPONSETOTHEUSER")
+        response_to_user = ""
+        if len(user_response_split) == 2:
+            response_to_user = user_response_split[-1]
+            response_to_user = response_to_user.lstrip(':').strip()
         else:
-            return [], response
+            response_to_user = response
+
+        if index_match is not None:
+            print("returing with picture")
+            return sl[index_match][3], response_to_user
+        else:
+            print("returning without picture :(")
+            return None, response_to_user
         
     def close(self):
         self.vs.close()

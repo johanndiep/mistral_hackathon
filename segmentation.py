@@ -122,7 +122,7 @@ class ImageSegmentation:
             #print(filtered_probabilities)
             #print(filtered_boxes)
         
-        Image.fromarray(np.uint8(image_array)).convert("RGB").save(segmented_image_path)
+        #Image.fromarray(np.uint8(image_array)).convert("RGB").save(segmented_image_path)
         
         ret_str = ""
         for res in seg_results:
