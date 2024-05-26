@@ -9,41 +9,33 @@ import os
 class ImageSegmentation:
     """A class representing the segmentation of objects based on the query."""
 
-    def __init__(self, query, image_path):
+    def __init__(self):
         """
-        Initialize the ImageSegmentation class.
-
-        Inputs:
-            - query (str): The query to extract objects from.
-            - image_path (str): The path to the image file.
+        Initialize the ImageSegmentation class. 
         """
-        self.image_path = image_path
-        self.segmented_image_path = self._get_segmented_image_path(image_path)
         self.model = LangSAM()
-        self.image_pil = Image.open(image_path).convert("RGB")
-        self.query = extract_nouns(query)
         self.masks = None
         self.objects = None
         self.boxes = None
         self.probabilities = None
 
-    def filter_outliers(self):
+    def filter_outliers(self, masks, boxes, objects, probabilities):
         """
         Filter out outliers based on probabilities using standard deviation method.
 
         Outputs:
             - list: Filtered probabilities.
         """
-        mean = torch.mean(self.probabilities)
-        std_dev = torch.std(self.probabilities)
+        mean = torch.mean(probabilities)
+        std_dev = torch.std(probabilities)
         threshold = 0.5 * std_dev
         lower_bound = mean - threshold
-        print(self.objects)
-        filtered_indices = self.probabilities >= lower_bound
-        filtered_mask = self.masks[filtered_indices]
-        filtered_boxes = self.boxes[filtered_indices]
-        filtered_objects = [self.objects[i] for i in range(len(self.objects)) if filtered_indices[i]]
-        filtered_probabilities = self.probabilities[filtered_indices]
+        print(objects)
+        filtered_indices = probabilities >= lower_bound
+        filtered_mask = masks[filtered_indices]
+        filtered_boxes = boxes[filtered_indices]
+        filtered_objects = [objects[i] for i in range(len(objects)) if filtered_indices[i]]
+        filtered_probabilities = probabilities[filtered_indices]
 
         return filtered_mask, filtered_boxes, filtered_objects, filtered_probabilities
 
@@ -60,17 +52,21 @@ class ImageSegmentation:
         base, ext = os.path.splitext(image_path)
         return f"{base}_segmented{ext}"
 
-    def get_filtered_results(self):
+    def segment_simple(self, query, image_path):
         """
         Get the final filtered results and generate a descriptive output string.
 
         Outputs:
             - str: Description of the number of objects detected.
         """
-        self.masks, self.boxes, self.objects, self.probabilities = self.model.predict(
-            self.image_pil, self.query
+
+        segmented_image_path = self._get_segmented_image_path(image_path)
+        image_pil = image_pil = Image.open(image_path).convert("RGB")
+        noun = extract_nouns(query)[0]
+        masks, boxes, objects, probabilities = self.model.predict(
+            image_pil, noun
         )
-        filtered_masks, filtered_boxes, filtered_objects, filtered_probabilities = self.filter_outliers()
+        filtered_masks, filtered_boxes, filtered_objects, filtered_probabilities = self.filter_outliers(masks, boxes, objects, probabilities)
 
         labels = [
             f"{filtered_object} {filtered_probability:.2f}"
@@ -79,17 +75,64 @@ class ImageSegmentation:
             )
         ]
 
-        image_array = np.asarray(self.image_pil)
+        image_array = np.asarray(image_pil)
         image = draw_image(image_array, filtered_masks, filtered_boxes, labels)
-        Image.fromarray(np.uint8(image)).convert("RGB").save(self.segmented_image_path)
+        Image.fromarray(np.uint8(image)).convert("RGB").save(segmented_image_path)
 
-        return f"There are {len(filtered_probabilities)} {self.query}."
+        return f"There are {len(filtered_probabilities)} {noun}.", image
 
+    def segment(self, query, image_path, keywords=None):
+        """
+        Get the final filtered results and generate a descriptive output string.
 
-# Example usage
-query = "Are there any people?"
-image_path = "data/Recording.jpeg"
-image_segmentation = ImageSegmentation(query, image_path)
-result = image_segmentation.get_filtered_results()
-print(result)
+        Outputs:
+            - str: Description of the number of objects detected.
+        """
+        print("KEYWORDS", keywords)
+        if keywords is None:
+            keywords = extract_nouns(query)
 
+        segmented_image_path = self._get_segmented_image_path(image_path)
+        image_pil = image_pil = Image.open(image_path).convert("RGB")
+        image_array = np.asarray(image_pil)
+
+        probs = list()
+        for word in keywords:
+            masks, boxes, objects, probabilities = self.model.predict(
+                image_pil, word
+            )
+
+            filtered_masks, filtered_boxes, filtered_objects, filtered_probabilities = self.filter_outliers(masks, boxes, objects, probabilities)
+
+            labels = [
+                f"{filtered_object} {filtered_probability:.2f}"
+                for filtered_object, filtered_probability in zip(
+                    filtered_objects, filtered_probabilities
+                )
+            ]
+
+            image_array = draw_image(image_array, filtered_masks, filtered_boxes, labels)
+
+            print(filtered_probabilities)
+            print(filtered_boxes)
+            probs.append(filtered_probabilities)
+        
+        Image.fromarray(np.uint8(image_array)).convert("RGB").save(segmented_image_path)
+        
+        ret_str = ""
+        for i, word in enumerate(keywords):
+            ret_str += f"There are {len(probs[i])} of the keyword {word}\n" 
+        #ret_str =  f"From the keywords {nouns} we retrieve the following filtered_probabilites {filtered_probabilities} ."
+        #print("Segmentation output ", ret_str, "\n\n")
+        return ret_str, image_array
+
+def test_Segmentation():
+    # Example usage
+    query = "How many people and chairs?"
+    image_path = "data/Untitled.jpeg"
+    image_segmentation = ImageSegmentation()
+    result, img = image_segmentation.segment(query, image_path)
+    print(result)
+
+if __name__ == "__main__":
+    test_Segmentation()
