@@ -50,18 +50,19 @@ The system has been tested on Ubuntu 22.04.4 LTS with the following specs:
 Also check out the references in the next section:
 
 - Deploy LLaVA [1]
-- Deploy Language Segment-Anything [2]
-- Setup a Neon database and provide the database URL as an environment variable `DATABASE_URL` [3]
-- Setup an environment variable `MISTRAL_API_KEY` for the Mistral key [4]
-- Setup an environment variable `GROQ_API_KEY` for the Groq API key [5]
+- Deploy Language Segment-Anything [2, 3]
+- Setup a Neon database and provide the database URL as an environment variable `DATABASE_URL` [4]
+- Setup an environment variable `MISTRAL_API_KEY` for the Mistral key [5]
+- Setup an environment variable `GROQ_API_KEY` for the Groq API key [6]
 - Run `pip install -r requirements.txt`
 
 ### References
 - [1] LLaVA: https://github.com/haotian-liu/LLaVA
-- [2] Language Segment Anything: https://github.com/facebookresearch/segment-anything and https://github.com/luca-medeiros/lang-segment-anything
-- [3] Neon Database: https://neon.tech/
-- [4] Mistral API: https://github.com/mistralai/mistral-inference
-- [5] Groq API: https://console.groq.com/docs/quickstart
+- [2] Segment Anything: https://github.com/facebookresearch/segment-anything  
+- [3] Language Segment Anything: https://github.com/luca-medeiros/lang-segment-anything
+- [4] Neon Database: https://neon.tech/
+- [5] Mistral API: https://github.com/mistralai/mistral-inference
+- [6] Groq API: https://console.groq.com/docs/quickstart
 
 ## Results
 ![Initial Results](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/results.jpeg?raw=true)
