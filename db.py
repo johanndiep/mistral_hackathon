@@ -3,11 +3,13 @@ from dotenv import load_dotenv
 load_dotenv()
 import psycopg2
 from mistralai.client import MistralClient
+from llama_index.llms.mistralai import MistralAI
 
 
 class MistralAPI:
     def __init__(self):
         self.client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
+        self.llm = MistralAI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-large-latest")
 
     def embed(self, txt):
         """ 
@@ -15,6 +17,10 @@ class MistralAPI:
         """
         embedding = self.client.embeddings("mistral-embed", txt)
         return embedding.data[0].embedding
+    
+    def chat(self, messages):
+        result = self.llm.chat(messages)
+        return result
     
 class Database:
     def __init__(self):

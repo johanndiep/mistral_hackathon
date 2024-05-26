@@ -7,4 +7,4 @@ gr.Interface(
     fn=chat.chat,  # The function to process the prompt
     inputs="text",  # Text input
     outputs=[gr.Image(type="numpy"), "text"]  # Output both an image and a text
-).launch()
+).launch(share=True)

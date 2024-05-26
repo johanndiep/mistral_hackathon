@@ -30,7 +30,7 @@ class ImageSegmentation:
         std_dev = torch.std(probabilities)
         threshold = 0.5 * std_dev
         lower_bound = mean - threshold
-        print(objects)
+        #print(objects)
         filtered_indices = probabilities >= lower_bound
         filtered_mask = masks[filtered_indices]
         filtered_boxes = boxes[filtered_indices]
@@ -96,7 +96,7 @@ class ImageSegmentation:
         image_pil = image_pil = Image.open(image_path).convert("RGB")
         image_array = np.asarray(image_pil)
 
-        probs = list()
+        seg_results = list()
         for word in keywords:
             masks, boxes, objects, probabilities = self.model.predict(
                 image_pil, word
@@ -111,19 +111,24 @@ class ImageSegmentation:
                 )
             ]
 
+            detailed_results = [
+                ("confidence: {:.2f}".format(filtered_probability), filtered_box.int().numpy().tolist())
+                for filtered_probability, filtered_box in zip(filtered_probabilities, filtered_boxes)
+            ]
+            seg_results.append((word, len(filtered_probabilities), detailed_results))
+
             image_array = draw_image(image_array, filtered_masks, filtered_boxes, labels)
 
-            print(filtered_probabilities)
-            print(filtered_boxes)
-            probs.append(filtered_probabilities)
+            #print(filtered_probabilities)
+            #print(filtered_boxes)
         
         Image.fromarray(np.uint8(image_array)).convert("RGB").save(segmented_image_path)
         
         ret_str = ""
-        for i, word in enumerate(keywords):
-            ret_str += f"There are {len(probs[i])} of the keyword {word}\n" 
+        for res in seg_results:
+            ret_str += f"In the keyword {res[0]} there are {res[1]} entities found with the following (confidence, bounding box): {res[2]}\n" 
         #ret_str =  f"From the keywords {nouns} we retrieve the following filtered_probabilites {filtered_probabilities} ."
-        #print("Segmentation output ", ret_str, "\n\n")
+        print("Segmentation output ", ret_str, "\n\n")
         return ret_str, image_array
 
 def test_Segmentation():
