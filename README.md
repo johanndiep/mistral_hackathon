@@ -74,6 +74,11 @@ cd lang-segment-anything && pip install -e .
 - Setup an environment variable `MISTRAL_API_KEY` for the Mistral key [5]
 - Setup an environment variable `GROQ_API_KEY` for the Groq API key [6]
 
+### Usage
+```
+python ui.py
+```
+
 ### References
 - [1] LLaVA: https://github.com/haotian-liu/LLaVA
 - [2] Segment Anything: https://github.com/facebookresearch/segment-anything  
