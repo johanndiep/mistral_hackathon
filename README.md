@@ -5,6 +5,7 @@ In the fast-paced world of modern robotics, autonomous systems capture vast amou
 
 ## Introduction
 ![Architecture](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/architecture.jpeg?raw=true)
+![Architecture](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/detailed_architecture.jpeg?raw=true)
 
 Enter Le ChatOn Vision, our revolutionary visual Retrieval-Augmented Generation (RAG) system. Le Chat-On Vision transforms how analysts interact with their data by allowing them to seamlessly query and understand captured videos through an intuitive chat interface. By significantly reducing cognitive load and accelerating insights, Le ChatOn Vision empowers analysts to focus on what truly matters—making informed decisions swiftly and accurately.
 
@@ -18,15 +19,14 @@ During initial testing, it is evident that the VLLM performs well in generating 
 
 Initially, the segmentation model encounters difficulties, leading to an abundance of outliers and inaccuracies in object segmentation. To tackle this issue, a Gaussian filter is introduced to eliminate outliers from segmented regions, thereby enhancing accuracy. As a result, Le ChatOn Vision can successfully count the number of people in the frame, even when the image is captured from a far distance. Additionally, it can provide a reasonably accurate count of the cans in the soda machine, despite the frames being of low quality due to motion blur.
 
-
 ## Services
 
 ### Compute
 Nebius cloud service was utilized, benefiting from its provision of a physical H100 GPU with 80GB RAM for compute tasks, augmented by an additional 160GB vRAM. This is particularly advantageous as the team was able to prioritize model selection over economic considerations for this project.
 
 ### LLM, VLLM and Embedding Model
-- The Mistral API was used for inference of the Mistral model (`8x22B` checkpoints) and the embedding model for primary context interrogation and database searches. Additionally, Mistral-derived LLaVA (`llava-v1.6-mistral-7B` checkpoint) and Language Segment-Anything (`vit_h` checkpoint) were deployed, both self-hosted locally on the compute server, for the VLLM and segmentation model, respectively.
-- For minor tasks like context re-ranking or keyword generation for segmentation, the GroqAPI for a smaller size Mistral model (`8x7B` checkpoint) was leveraged to ensure faster inference for text generation.
+- The Mistral API was used for inference of the mistral-large and the embedding model for primary context interrogation and similarity searches using cosine similarity. Additionally, Mistral-derived LLaVA (`llava-v1.6-mistral-7B` checkpoint) and Language Segment-Anything (`vit_h` checkpoint) were deployed, both self-hosted locally on the compute server, for the VLLM and segmentation model, respectively.
+- For tasks like reranking the list of retrieved entites, the GroqAPI with a smaller size Mistral model (`8x7B` checkpoint) was leveraged to ensure faster inference for text generation.
 
 ### Database
 - A Postgres database hosted on Neon was used due to its user-friendly interface, which offers easy insights into the generated database via their web interface. This allows for straightforward deletion of columns and rows without the need to handle SQL commands, particularly beneficial during the testing phase of the project.
