@@ -1,4 +1,6 @@
 ## Inspiration
+![Drone](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/drone.jpg?raw=true)
+
 In the fast-paced world of modern robotics, autonomous systems capture vast amounts of video data, but sifting through this information still relies heavily on human operators. This manual review process is time-consuming and mentally exhausting, limiting the efficiency and effectiveness of data utilization.
 
 ## Introduction
