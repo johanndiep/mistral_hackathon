@@ -14,7 +14,7 @@ import re
 #You may recieve a list of bounding boxes, each containing specific parts of the image that may be relevant to the user query.
 
 class Chat:
-    def __init__(self):
+    def __init__(self, debug=True, k=10, limit=5):
         self.default_prompt = "Where is the fire escape"
         self.system_prompt = """
                             For each user query, you will be provided with the following inputs:
@@ -66,13 +66,23 @@ class Chat:
             Maybe there is some unecesarry information? The query should be consise. 
             Either way, generate the query in full and only the query.
             """
+        self.keywords_system_prompt = f"""Think step by step. From a user query, you need to extract or generate a keyword or a list of a few keywords that will make it easy for you to answer the query.
+                                From these keywords you will recieve the following information
+                                - For each keyword you will recieve how many entities of that keyword is visible in the image
+                                - A bounding box that will tell you where each entity is located. 
+                                Think step by step for keywords that will retrieve the information needed to answer the user query.
+                                Remember, the fewer the better. The simpler the keywords the better.
+                                End your response with a format like this: [keyword1, keyword2], no " or '"""
+        
+        self.debug=debug
+        self.k = k
+        self.limit = limit
         
     def chat(self, message, history):
         # rewrite the user query
         message = self.mistral_client.chat([ChatMessage(role="system", content=self.rewrite_system_prompt), ChatMessage(role="user", content=message)])
-        message = message.message.content
-        print("rewritten user query: ", message)
-
+        if self.debug: 
+            print("rewritten user query: ", message)
 
         # create the message history with system prompt
         messages = [ChatMessage(role="system", content=self.system_prompt)]
@@ -81,57 +91,45 @@ class Chat:
                 messages.append(ChatMessage(role="user", content=pair[0]))
                 messages.append(ChatMessage(role="assistant", content=pair[1]))
 
-        # Retrival top 3 k
-        k = 10
-        retrived = self.vs.search(message, k)
+        # Retrival top k, using cosine similarity
+        retrived = self.vs.search(message, self.k)
        
-        # Rerank
-        retrived_parsed = [(index, item[3]) for index, item in enumerate(retrived)]
-        retrived_str = str(retrived_parsed)
-        print("Retrievedstr ", retrived_str, "\n\n")
+        # Rerank using groq mistral 7x22B
+        retrived_parsed = str([(index, item[3]) for index, item in enumerate(retrived)])
+        if self.debug:
+            print("Retrievedstr ", retrived_parsed, "\n\n")
 
-        rerank_prompt = "User query: " + message + "\nTop " + str(k) + "retrieved captions: " + retrived_str
+        rerank_prompt = "User query: " + message + "\nTop " + str(self.k) + "retrieved captions: " + retrived_parsed
 
         rerank_messages = [ChatMessage(role="system", content=self.rerank_system_prompt), ChatMessage(role="user", content=rerank_prompt)]
         rerank_result = self.llm.chat(rerank_messages)
-        rerank_result = rerank_result.message.content
-        print("rerank result: ", rerank_result)
+        if self.debug:
+            print("rerank result: ", rerank_result)
      
         # Extract the number between <list_index> and </list_index>
-        match = re.search(r'\[(.*?)\]', rerank_result)
+        match = re.search(r'\[(.*?)\]', str(rerank_result))
         ranked_list = None #if there is no match, use the first
         if match:
             ranked_match = match.group(1)
-            print("ranked match" , ranked_match)
             ranked_match = ranked_match.replace("[", "").replace("]", "")
             ranked_list = ranked_match.split(", ")
             ranked_list = [int(x) for x in ranked_list]
-            print(f"ranked list: {ranked_list} \n\n")
+            if self.debug:
+                print(f"ranked list: {ranked_list} \n\n")
 
         if ranked_list:
             # Sort the retrieved items based on the ranked list
             retrived = [retrived[i] for i in ranked_list]
 
-        limit = 5
-        retrived = retrived[:limit]
+        # limit the amount of messages
+        retrived = retrived[:self.limit]
         
-        #most_relevant_image = retrived[int(most_relevant_index)]
-        #most_relevant_filename = most_relevant_image[2]
-        #most_relevant_caption = most_relevant_image[3]
 
         # Extract a list of keywords for the segmentation:
-        keywords_system_prompt = f"""Think step by step. From a user query, you need to extract or generate a keyword or a list of a few keywords that will make it easy for you to answer the query.
-                                From these keywords you will recieve the following information
-                                - For each keyword you will recieve how many entities of that keyword is visible in the image
-                                - A bounding box that will tell you where each entity is located. 
-                                Think step by step for keywords that will retrieve the information needed to answer the user query.
-                                Remember, the fewer the better. The simpler the keywords the better.
-                                End your response with a format like this: [keyword1, keyword2], no " or '"""
-        print("keywords system prompt: ", keywords_system_prompt)
         # mistral 7b was too bad at generating keywords, using mistral large instead 
-        keywords_messages = [ChatMessage(role="system", content=keywords_system_prompt), ChatMessage(role="user", content=message)]
+        keywords_messages = [ChatMessage(role="system", content=self.keywords_system_prompt), ChatMessage(role="user", content=message)]
         keywords_llm = self.mistral_client.chat(keywords_messages)
-        keywords_result = keywords_llm.message.content
+        keywords_result = keywords_llm
         print("response from keyword llm :", keywords_result)   
 
         # Extract the number between <list_index> and </list_index>
@@ -139,38 +137,37 @@ class Chat:
         keyword_list = None # if no match, use standard keyword search.
         if match:
             keyword_match = match.groups()[-1] # incase the user includes a list in his query, use the last
-            print("keyword match" , keyword_match)
             keyword_match = keyword_match.replace("[", "").replace("]", "")
             keyword_list = keyword_match.split(", ")
             keyword_list = [str(x) for x in keyword_list]
-            print(f"Keyword list: {keyword_list} \n\n")
+            if self.debug:
+                print(f"Keyword list: {keyword_list} \n\n")
 
         sl = list()
         for i, entry in enumerate(retrived):
             # Segmentation
             seg_res, seg_img_np = self.segmentation_model.segment(message, entry[2], keyword_list)
-            print("Seg res: ", seg_res)
+            if self.debug:
+                print("Segmentation result: ", seg_res)
             # index in retrieved, caption, segmentation res, image in numpy
             sl.append((i, entry[3], seg_res, seg_img_np))
 
         message_with_retrieved = "User query: " + message + "\nPotential images with captions and segmentation result:\n\n"
         for img in sl:
             message_with_retrieved += f"Index {img[0]}\nImage caption: {img[1]}\nSegmentation results: {img[2]}\n\n"
-        print("message with retriveed" , message_with_retrieved, "\n")
+        if self.debug:
+            print("message with retriveed" , message_with_retrieved, "\n")
 
         messages.append(ChatMessage(role="user", content=message_with_retrieved))
 
-        # get image and convert to numpy
-        #print("Most relevant image: ", most_relevant_filename, "\n\n")
-        #image = Image.open(most_relevant_filename)
-        #image_np = np.array(image)
-        #resp = self.llm.stream_chat(messages)
-        response = self.mistral_client.chat(messages).message.content
-        print("Response from mistral: ", response)
+        response = self.mistral_client.chat(messages)
+        if self.debug:
+            print("Response from mistral: ", response)
         
         # Extract the number between <list_index> and </list_index>
         index_regex = re.search(r'<image_index>(.*?)</image_index>', response)
-        print("index_regex: ",  index_regex)
+        if self.debug:
+            print("index_regex: ",  index_regex)
         index_match = None
         if index_regex:
             index_match = index_regex.groups()[-1] # incase the user includes a list in his query, use the last
@@ -178,16 +175,21 @@ class Chat:
                 index_match = int(index_match)
             except:
                 print("failed to convert to number ", index_match)
-            print("index match" , index_match)
+            if self.debug:
+                print("index match" , index_match)
         else:
             number_response = self.mistral_client.chat([ChatMessage(role="system", content="Find the Index number from the following text from the user. It should be inside <list_index></list_index>, if it is not try to extract this number from the context. Only return the single number and nothing else. Only a single number."), ChatMessage(role="user", content=response)])
-            number_response = number_response.message.content
+            number_response = number_response
             print("backup number_response: ", number_response)
             try:
                 index_match = int(number_response)
             except:
                 print("found no index :(")
-        print("INDEX MATCH ", index_match)
+        
+        if self.debug:
+            print("INDEX MATCH ", index_match)
+
+        # Split the response on a predifined str
         user_response_split = response.split("RESPONSETOTHEUSER")
         response_to_user = ""
         if len(user_response_split) == 2:
@@ -197,7 +199,7 @@ class Chat:
             response_to_user = response
 
         if index_match is not None:
-            print("returing with picture")
+            print("returning with picture")
             return sl[index_match][3], response_to_user
         else:
             print("returning without picture :(")
