@@ -63,7 +63,7 @@ class Chat:
         self.segmentation_model = ImageSegmentation()
         self.rewrite_system_prompt = """
             Rewrite and expand the user query. Is there some missing information that would be usefull to include? For example a setting, object, or something that is not mentioned, but would be relevant to search for?
-            The query should be consise, so if the user query already contains the relevant information, keep it as is. 
+            Maybe there is some unecesarry information? The query should be consise. 
             Either way, generate the query in full and only the query.
             """
         
