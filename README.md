@@ -1,11 +1,11 @@
 ## Inspiration
-![Drone](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/drone.jpg?raw=true)
+![Drone](https://github.com/johanndiep/mistral_hackathon/readme_img/drone.jpg?raw=true)
 
 In the fast-paced world of modern robotics, autonomous systems capture vast amounts of video data, but sifting through this information still relies heavily on human operators. This manual review process is time-consuming and mentally exhausting, limiting the efficiency and effectiveness of data utilization.
 
 ## Introduction
-![Architecture](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/architecture.jpeg?raw=true)
-![Architecture](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/detailed_architecture.jpeg?raw=true)
+![Architecture](https://github.com/johanndiep/mistral_hackathon/readme_img/architecture.jpeg?raw=true)
+![Architecture](https://github.com/johanndiep/mistral_hackathon/readme_img/detailed_architecture.jpeg?raw=true)
 
 Enter Le ChatOn Vision, our revolutionary visual Retrieval-Augmented Generation (RAG) system. Le Chat-On Vision transforms how analysts interact with their data by allowing them to seamlessly query and understand captured videos through an intuitive chat interface. By significantly reducing cognitive load and accelerating insights, Le ChatOn Vision empowers analysts to focus on what truly matters—making informed decisions swiftly and accurately.
 
@@ -91,7 +91,7 @@ python ui.py
 - [6] Groq API: https://console.groq.com/docs/quickstart
 
 ## Results
-![Initial Results](https://github.com/johanndiep/mistral_hackathon/blob/vision_model/readme_img/results.jpeg?raw=true)
+![Initial Results](https://github.com/johanndiep/mistral_hackathon/readme_img/results.jpeg?raw=true)
 
 ## Whats next
 Le ChatOn Vision revolutionizes data analysis across industries. Fire-detecting drones, crop-inspecting robots, planetary rovers, and security patrol robots all benefit from its chat-based video querying. This system makes decision-making smarter, faster, and more efficient by transforming how video data is utilized.
