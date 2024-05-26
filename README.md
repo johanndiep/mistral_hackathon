@@ -51,12 +51,28 @@ The system has been tested on Ubuntu 22.04.4 LTS with the following specs:
 ### Installation
 Also check out the references in the next section:
 
-- Deploy LLaVA [1]
-- Deploy Language Segment-Anything [2, 3]
+```bash
+git clone git@github.com:johanndiep/mistral_hackathon.git && cd mistral_hackathon
+pip install -r requirements.txt
+
+# deploy LLava [1] and fix in the same folder
+cd ..
+git clone git@github.com:kimborgen/LLaVA/tree/mistral-hackathon
+cd LLavA
+conda create -n llava python=3.10 -y
+conda activate llava
+pip install --upgrade pip  # enable PEP 660 support
+pip install -e .
+cd ..
+
+# Deploy Language Segment-Anything [2, 3] and fix in the same folder
+git clone git@github.com:kimborgen/lang-segment-anything/tree/mistral-hackathon
+cd lang-segment-anything && pip install -e .
+```
+
 - Setup a Neon database and provide the database URL as an environment variable `DATABASE_URL` [4]
 - Setup an environment variable `MISTRAL_API_KEY` for the Mistral key [5]
 - Setup an environment variable `GROQ_API_KEY` for the Groq API key [6]
-- Run `pip install -r requirements.txt`
 
 ### References
 - [1] LLaVA: https://github.com/haotian-liu/LLaVA

@@ -5,3 +5,4 @@ Mistral
 __pycache__/
 LLaVA/
 .github
+lang-segment-anything/
